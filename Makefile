@@ -1,9 +1,16 @@
-.PHONY: all test
+CFLAGS := -Wall -O3
 
-all: test
+.PHONY: all test asm
+
+all: asm test
 
 a.out: main.cpp
-	$(CXX) main.cpp
+	$(CXX) $(CFLAGS) main.cpp
 
 test: a.out
 	./a.out
+
+asm: main.s
+main.s: main.cpp
+	$(CXX) -S $(CFLAGS) main.cpp
+

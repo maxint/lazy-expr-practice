@@ -1,5 +1,5 @@
-#ifndef __MAT_HPP__
-#define __MAT_HPP__
+// Practice code for "Lazy Expression"
+// https://github.com/dmlc/mshadow/tree/master/guide/exp-template
 
 #include <cstdio>
 
@@ -129,22 +129,20 @@ operator/(const Exp<TLhs> &lhs, const Exp<TRhs> &rhs) {
 
 int main() {
     const int n = 3;
-    float sa[n] = {1, 2, 3};
-    float sb[n] = {2, 3, 4};
-    float sc[n] = {3, 4, 5};
-    Vec<float> A(sa, n), B(sb, n), C(sc, n);
+    int sa[n] = {1, 2, 3};
+    int sb[n] = {2, 3, 4};
+    int sc[n] = {3, 4, 5};
+    Vec<int> A(sa, n), B(sb, n), C(sc, n);
     // run expression, this expression is longer:)
     A = B + C + C;
     for (int i = 0; i < n; ++i) {
-        printf("%d:%f == %f + %f + %f\n", i,
+        printf("%d:%d == %d + %d + %d\n", i,
                A.dptr[i], B.dptr[i], C.dptr[i], C.dptr[i]);
     }
-    A = B * C + F<detail::maximum<float> >(B, C);
+    A = B * C + F<detail::maximum<int> >(B, C);
     for (int i = 0; i < n; ++i) {
-        printf("%d:%f == %f * %f + max(%f, %f)\n", i,
+        printf("%d:%d == %d * %d + max(%d, %d)\n", i,
                A.dptr[i], B.dptr[i], C.dptr[i], B.dptr[i], C.dptr[i]);
     }
     return 0;
 }
-
-#endif /* end of include guard */
