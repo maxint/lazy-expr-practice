@@ -65,41 +65,41 @@ F(const Exp<TLhs> &lhs, const Exp<TRhs> &rhs) {
 
 namespace detail {
 
-  template<typename T> struct add {
-    inline static T Map(const T& a, const T& b) {
-      return a + b;
-    }
-  };
+template<typename T> struct add {
+  inline static T Map(const T& a, const T& b) {
+    return a + b;
+  }
+};
 
-  template<typename T> struct sub {
-    inline static T Map(const T& a, const T& b) {
-      return a - b;
-    }
-  };
+template<typename T> struct sub {
+  inline static T Map(const T& a, const T& b) {
+    return a - b;
+  }
+};
 
-  template<typename T> struct mul {
-    inline static T Map(const T& a, const T& b) {
-      return a * b;
-    }
-  };
+template<typename T> struct mul {
+  inline static T Map(const T& a, const T& b) {
+    return a * b;
+  }
+};
 
-  template<typename T> struct div {
-    inline static T Map(const T& a, const T& b) {
-      return a / b;
-    }
-  };
+template<typename T> struct div {
+  inline static T Map(const T& a, const T& b) {
+    return a / b;
+  }
+};
 
-  template<typename T> struct maximum {
-    inline static T Map(const T& a, const T& b) {
-      return a > b ? a : b;
-    }
-  };
+template<typename T> struct maximum {
+  inline static T Map(const T& a, const T& b) {
+    return a > b ? a : b;
+  }
+};
 
-  template<typename T> struct minimum {
-    inline static T Map(const T& a, const T& b) {
-      return a < b ? a : b;
-    }
-  };
+template<typename T> struct minimum {
+  inline static T Map(const T& a, const T& b) {
+    return a < b ? a : b;
+  }
+};
 
 } // namespace detail
 
