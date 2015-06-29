@@ -4,7 +4,6 @@
 #include <cstdio>
 #include "matx.h"
 
-
 int main() {
   const int n = 3;
   Matx<int, n> A(1, 2, 3), B(2, 3, 4), C(3, 4, 5);
@@ -18,6 +17,20 @@ int main() {
   for (int i = 0; i < n; ++i) {
     printf("#%d: %d == %d + %d + max(%d, %d)\n", i,
            A[i], B[i], C[i], B[i], C[i]);
+  }
+
+  // transpose
+  printf("Transpose Test:\n");
+  Matx<int, 2, 2> D(1, 2, 3, 4), Dt;
+  Dt = D.t();
+  assert(D(0,0) == Dt(0,0));
+  assert(D(0,1) == Dt(1,0));
+  assert(D(1,0) == Dt(0,1));
+  assert(D(1,1) == Dt(1,1));
+  for (int i = 0; i < 2; ++i) {
+    for (int j = 0; j < 2; ++j) {
+      printf("# %d,%d: %d -> %d\n", i, j, D(i, j), Dt(i, j));
+    }
   }
   return 0;
 }

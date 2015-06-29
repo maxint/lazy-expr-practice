@@ -25,13 +25,58 @@ struct BinaryMapExpr : Expr<BinaryMapExpr<OP, TLhs, TRhs> > {
   const TRhs &rhs;
   typedef typename ReturnType<TLhs, TRhs>::value_type value_type;
 
-  BinaryMapExpr(const TLhs &lhs, const TRhs &rhs)
+  inline BinaryMapExpr(const TLhs &lhs, const TRhs &rhs)
     : lhs(lhs), rhs(rhs) {}
 
   inline value_type Eval(index_t i, index_t j) const {
     return OP::Map(lhs.Eval(i, j), rhs.Eval(i, j));
   }
 };
+
+// template works for any binary expressions
+template<typename OP, typename TLhs, typename TRhs>
+inline BinaryMapExpr<OP, TLhs, TRhs>
+F(const Expr<TLhs> &lhs, const Expr<TRhs> &rhs) {
+  return BinaryMapExpr<OP, TLhs, TRhs>(lhs.self(), rhs.self());
+}
+
+// general unary operation
+template<typename OP, typename TRValue>
+struct UnaryMapExpr : Expr<UnaryMapExpr<OP, TRValue> > {
+  const TRValue &rval;
+  typedef typename TRValue::value_type value_type;
+
+  inline UnaryMapExpr(const TRValue& rval) : rval(rval) {}
+
+  inline value_type Eval(index_t i, index_t j) const {
+    return OP::Map(rval.Eval(i, j));
+  }
+};
+
+// template works for any unary expressions
+template<typename OP, typename TRValue>
+inline UnaryMapExpr<OP, TRValue>
+F(const Expr<TRValue> &rval) {
+  return UnaryMapExpr<OP, TRValue>(rval.self());
+}
+
+// transpose
+template<typename TRValue>
+struct TransposeExpr : Expr<TransposeExpr<TRValue> > {
+  const TRValue &rval;
+  typedef typename TRValue::value_type value_type;
+
+  inline TransposeExpr(const TRValue& rval) : rval(rval) {}
+
+  inline value_type Eval(index_t i, index_t j) const {
+    return rval.Eval(j, i);
+  }
+};
+
+template<typename EType>
+inline TransposeExpr<EType> transpose(const EType& rval) {
+  return TransposeExpr<EType>(rval);
+}
 
 namespace op {
 
@@ -72,12 +117,6 @@ struct minimum {
 };
 
 } // namespace op
-
-// template works for any expressions
-template<typename OP, typename TLhs, typename TRhs>
-inline BinaryMapExpr<OP, TLhs, TRhs> F(const Expr<TLhs> &lhs, const Expr<TRhs> &rhs) {
-  return BinaryMapExpr<OP, TLhs, TRhs>(lhs.self(), rhs.self());
-}
 
 // addition
 template<typename TLhs, typename TRhs>

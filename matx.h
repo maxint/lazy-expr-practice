@@ -48,6 +48,25 @@ struct Matx : public Expr<Matx<T, m, n> > {
     for (int i = 4; i < channels; ++i) val[i] = T(0);
   }
 
+  // construction from pointer
+  inline explicit Matx(const T* ptr) {
+    assert(0 != ptr);
+    for (int i = 0; i < channels; ++i) val[i] = ptr[i];
+  }
+
+  // conversion contructor
+  template<typename T2>
+  inline explicit Matx(const Matx<T2, m, n>& other) {
+    for (int i = 0; i < channels; ++i) val[i] = (T) other.val[i];
+  }
+
+  // conversion operator
+  template<typename T2>
+  inline operator Matx<T2, m, n>() {
+    return Matx<T2, m, n>(*this);
+  }
+
+  // assignment expression
   template<typename EType> inline Matx &operator=(const Expr<EType> &src_) {
     const EType &src = src_.self();
     for (int i = 0; i < m; ++i) {
@@ -58,26 +77,27 @@ struct Matx : public Expr<Matx<T, m, n> > {
     return *this;
   }
 
-  inline const T& operator() (index_t i, index_t j) const {
+  //  accessors
+  inline const T& operator ()(index_t i, index_t j) const {
     assert(i < m && j < n);
     return val[i*n+j];
   }
-  inline T& operator() (index_t i, index_t j) {
+  inline T& operator ()(index_t i, index_t j) {
     assert(i < m && j < n);
     return val[i*n+j];
   }
-  inline const T& operator() (index_t i) const {
+  inline const T& operator ()(index_t i) const {
     assert(i < channels);
     return val[i];
   }
-  inline T& operator() (index_t i) {
+  inline T& operator ()(index_t i) {
     assert(i < channels);
     return val[i];
   }
-  inline const T& operator[] (index_t i) const {
+  inline const T& operator [](index_t i) const {
     return (*this)(i);
   }
-  inline T& operator[] (index_t i) {
+  inline T& operator [](index_t i) {
     return (*this)(i);
   }
 
@@ -85,8 +105,30 @@ struct Matx : public Expr<Matx<T, m, n> > {
     return (*this)(i, j);
   }
 
+  // transpose
+  inline TransposeExpr<Matx> t() const {
+    return transpose(*this);
+  }
+
   T val[channels];
 };
+
+typedef Matx<float , 2, 2> Matx2f;
+typedef Matx<float , 3, 3> Matx3f;
+typedef Matx<float , 4, 4> Matx4f;
+typedef Matx<double, 2, 2> Matx2d;
+typedef Matx<double, 3, 3> Matx3d;
+typedef Matx<double, 4, 4> Matx4d;
+
+typedef Matx<float , 2, 1> Vec2f;
+typedef Matx<float , 3, 1> Vec3f;
+typedef Matx<float , 4, 1> Vec4f;
+typedef Matx<double, 2, 1> Vec2d;
+typedef Matx<double, 3, 1> Vec3d;
+typedef Matx<double, 4, 1> Vec4d;
+
+// vector template alias (c++11 only)
+template<typename T, int m> using Vec = Matx<T, m, 1>;
 
 #endif /* end of include guard */
 
