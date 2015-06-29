@@ -21,7 +21,7 @@ int main() {
 
   // transpose
   printf("Transpose Test:\n");
-  Matx<int, 2, 2> D(1, 2, 3, 4), Dt;
+  Matx<int, 2, 2> D(1, 2, 3, 4), Dt, E(5, 5, 5, 5);
   Dt = D.t();
   assert(D(0,0) == Dt(0,0));
   assert(D(0,1) == Dt(1,0));
@@ -30,6 +30,12 @@ int main() {
   for (int i = 0; i < 2; ++i) {
     for (int j = 0; j < 2; ++j) {
       printf("# %d,%d: %d -> %d\n", i, j, D(i, j), Dt(i, j));
+    }
+  }
+  Dt = transpose(D + E);
+  for (int i = 0; i < 2; ++i) {
+    for (int j = 0; j < 2; ++j) {
+      printf("# %d,%d: (%d + %d) -> %d\n", i, j, D(i, j), E(i, j), Dt(i, j));
     }
   }
   return 0;
