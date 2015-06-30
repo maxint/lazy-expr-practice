@@ -1,136 +1,116 @@
 #ifndef __EXPR_H__
 #define __EXPR_H__
 
+#include "base.h"
 #include <cassert>
 
 typedef unsigned index_t;
 
+template<typename EType, typename DType> struct TransposeExpr;
+
 // expression
-template<typename SubType>
+template<typename SubType, typename DType>
 struct Expr {
   inline const SubType& self() const {
     return *static_cast<const SubType*>(this);
   }
+
+  TransposeExpr<SubType, DType> T() const {
+    return TransposeExpr<SubType, DType>(this->self());
+  }
 };
 
-// value type for binary expression
-template<typename TLhs, typename TRhs>
-struct ReturnType {
-  typedef typename TLhs::value_type value_type;
-};
+//---------------------------------------------
+// BinaryMapExpr
+//---------------------------------------------
 
 // general binary operation
-template<typename OP, typename TLhs, typename TRhs>
-struct BinaryMapExpr : Expr<BinaryMapExpr<OP, TLhs, TRhs> > {
+template<typename OP, typename TLhs, typename TRhs, typename DType>
+struct BinaryMapExpr : Expr<BinaryMapExpr<OP, TLhs, TRhs, DType>, DType> {
   const TLhs &lhs;
   const TRhs &rhs;
-  typedef typename ReturnType<TLhs, TRhs>::value_type value_type;
 
-  inline BinaryMapExpr(const TLhs &lhs, const TRhs &rhs)
+  inline explicit BinaryMapExpr(const TLhs &lhs, const TRhs &rhs)
     : lhs(lhs), rhs(rhs) {}
 
-  inline value_type Eval(index_t i, index_t j) const {
+  inline DType Eval(index_t i, index_t j) const {
     return OP::Map(lhs.Eval(i, j), rhs.Eval(i, j));
   }
 };
 
 // template works for any binary expressions
-template<typename OP, typename TLhs, typename TRhs>
-inline BinaryMapExpr<OP, TLhs, TRhs>
-F(const Expr<TLhs> &lhs, const Expr<TRhs> &rhs) {
-  return BinaryMapExpr<OP, TLhs, TRhs>(lhs.self(), rhs.self());
+template<typename OP, typename TLhs, typename TRhs, typename DType>
+inline BinaryMapExpr<OP, TLhs, TRhs, DType>
+F(const Expr<TLhs, DType> &lhs, const Expr<TRhs, DType> &rhs) {
+  return BinaryMapExpr<OP, TLhs, TRhs, DType>(lhs.self(), rhs.self());
 }
 
+// plus
+template<typename TLhs, typename TRhs, typename DType>
+inline BinaryMapExpr<op::plus, TLhs, TRhs, DType>
+operator +(const Expr<TLhs, DType> &lhs, const Expr<TRhs, DType> &rhs) {
+  return F<op::plus>(lhs, rhs);
+}
+
+// minus
+template<typename TLhs, typename TRhs, typename DType>
+inline BinaryMapExpr<op::minus, TLhs, TRhs, DType>
+operator -(const Expr<TLhs, DType> &lhs, const Expr<TRhs, DType> &rhs) {
+  return F<op::minus>(lhs, rhs);
+}
+
+// multiplying
+template<typename TLhs, typename TRhs, typename DType>
+inline BinaryMapExpr<op::mul, TLhs, TRhs, DType>
+operator *(const Expr<TLhs, DType> &lhs, const Expr<TRhs, DType> &rhs) {
+  return F<op::mul>(lhs, rhs);
+}
+
+// division
+template<typename TLhs, typename TRhs, typename DType>
+inline BinaryMapExpr<op::div, TLhs, TRhs, DType>
+operator /(const Expr<TLhs, DType> &lhs, const Expr<TRhs, DType> &rhs) {
+  return F<op::div>(lhs, rhs);
+}
+
+//---------------------------------------------
+// UnaryMapExpr
+//---------------------------------------------
+
 // general unary operation
-template<typename OP, typename TRValue>
-struct UnaryMapExpr : Expr<UnaryMapExpr<OP, TRValue> > {
-  const TRValue &rval;
-  typedef typename TRValue::value_type value_type;
+template<typename OP, typename EType, typename DType>
+struct UnaryMapExpr : Expr<UnaryMapExpr<OP, EType, DType>, DType> {
+  const EType &rval;
 
-  inline UnaryMapExpr(const TRValue& rval) : rval(rval) {}
+  inline explicit UnaryMapExpr(const EType& rval) : rval(rval) {}
 
-  inline value_type Eval(index_t i, index_t j) const {
+  inline DType Eval(index_t i, index_t j) const {
     return OP::Map(rval.Eval(i, j));
   }
 };
 
 // template works for any unary expressions
-template<typename OP, typename TRValue>
-inline UnaryMapExpr<OP, TRValue>
-F(const Expr<TRValue> &rval) {
-  return UnaryMapExpr<OP, TRValue>(rval.self());
+template<typename OP, typename EType, typename DType>
+inline UnaryMapExpr<OP, EType, DType>
+F(const Expr<EType, DType> &rval) {
+  return UnaryMapExpr<OP, EType, DType>(rval.self());
 }
 
 // transpose
-template<typename TRValue>
-struct TransposeExpr : Expr<TransposeExpr<TRValue> > {
-  const TRValue &rval;
-  typedef typename TRValue::value_type value_type;
+template<typename EType, typename DType>
+struct TransposeExpr : Expr<TransposeExpr<EType, DType>, DType> {
+  const EType &rval;
 
-  inline TransposeExpr(const TRValue& rval) : rval(rval) {}
+  inline TransposeExpr(const EType& rval) : rval(rval) {}
 
-  inline value_type Eval(index_t i, index_t j) const {
+  inline DType Eval(index_t i, index_t j) const {
     return rval.Eval(j, i);
   }
 };
 
-template<typename EType>
-inline TransposeExpr<EType> transpose(const EType& rval) {
-  return TransposeExpr<EType>(rval);
-}
-
-namespace op {
-
-struct add {
-  template<typename T> inline static T Map(const T& a, const T& b) {
-    return a + b;
-  }
-};
-
-struct sub {
-  template<typename T> inline static T Map(const T& a, const T& b) {
-    return a - b;
-  }
-};
-
-struct mul {
-  template<typename T> inline static T Map(const T& a, const T& b) {
-    return a * b;
-  }
-};
-
-struct div {
-  template<typename T> inline static T Map(const T& a, const T& b) {
-    return a / b;
-  }
-};
-
-struct maximum {
-  template<typename T> inline static T Map(const T& a, const T& b) {
-    return a > b ? a : b;
-  }
-};
-
-struct minimum {
-  template<typename T> inline static T Map(const T& a, const T& b) {
-    return a < b ? a : b;
-  }
-};
-
-} // namespace op
-
-// addition
-template<typename TLhs, typename TRhs>
-inline BinaryMapExpr<op::add, TLhs, TRhs>
-operator+(const Expr<TLhs> &lhs, const Expr<TRhs> &rhs) {
-  return F<op::add>(lhs, rhs);
-}
-
-// subtraction
-template<typename TLhs, typename TRhs>
-inline BinaryMapExpr<op::sub, TLhs, TRhs>
-operator-(const Expr<TLhs> &lhs, const Expr<TRhs> &rhs) {
-  return F<op::sub>(lhs, rhs);
+template<typename SubType, typename DType>
+inline TransposeExpr<SubType, DType> Transpose(const Expr<SubType, DType>& rval) {
+  return rval.T();
 }
 
 #endif /* end of include guard */

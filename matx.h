@@ -2,11 +2,10 @@
 #define __MATX_H__
 
 #include "expr.h"
+#include <ostream>
 
 template<typename T, int m, int n=1>
-struct Matx : public Expr<Matx<T, m, n> > {
-  typedef T value_type;
-
+struct Matx : public Expr<Matx<T, m, n>, T> {
   enum {
     rows = m,
     cols = n,
@@ -67,7 +66,7 @@ struct Matx : public Expr<Matx<T, m, n> > {
   }
 
   // assignment expression
-  template<typename EType> inline Matx &operator=(const Expr<EType> &src_) {
+  template<typename EType> inline Matx& operator =(const Expr<EType, T> &src_) {
     const EType &src = src_.self();
     for (int i = 0; i < m; ++i) {
       for (int j = 0; j < n; ++j) {
@@ -105,11 +104,7 @@ struct Matx : public Expr<Matx<T, m, n> > {
     return (*this)(i, j);
   }
 
-  // transpose
-  inline TransposeExpr<Matx> t() const {
-    return transpose(*this);
-  }
-
+private:
   T val[channels];
 };
 
