@@ -13,6 +13,7 @@ struct Expr {
   }
 };
 
+// value type for binary expression
 template<typename TLhs, typename TRhs>
 struct ReturnType {
   typedef typename TLhs::value_type value_type;

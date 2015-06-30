@@ -128,7 +128,7 @@ typedef Matx<double, 3, 1> Vec3d;
 typedef Matx<double, 4, 1> Vec4d;
 
 // vector template alias (c++11 only)
-template<typename T, int m> using Vec = Matx<T, m, 1>;
+//template<typename T, int m> using Vec = Matx<T, m, 1>;
 
 #endif /* end of include guard */
 
