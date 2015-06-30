@@ -2,21 +2,134 @@
 #define __EXPR_H__
 
 #include "base.h"
-#include <cassert>
 
-typedef unsigned index_t;
+namespace expr {
 
 template<typename EType, typename DType> struct TransposeExpr;
+template<typename Saver, typename RValue, typename DType> struct ExprEngine;
+template<typename DstDType, typename SrcDType, typename EType> struct TypeCastExpr;
 
-// expression
+//---------------------------------------------
+// Expr
+//---------------------------------------------
+
 template<typename SubType, typename DType>
 struct Expr {
-  inline const SubType& self() const {
+  inline const SubType& self(void) const {
     return *static_cast<const SubType*>(this);
   }
 
-  TransposeExpr<SubType, DType> T() const {
+  inline SubType& self(void) {
+    return *static_cast<SubType*>(this);
+  }
+
+  inline TransposeExpr<SubType, DType> T(void) const {
     return TransposeExpr<SubType, DType>(this->self());
+  }
+
+  template<typename DstDType>
+  inline TypeCastExpr<DstDType, DType, SubType> Cast(void) const {
+    return TypeCastExpr<DstDType, DType, SubType>(this->self());
+  }
+};
+
+//---------------------------------------------
+// ScalarExpr
+//---------------------------------------------
+
+template<typename DType>
+struct ScalarExpr : public Expr<ScalarExpr<DType>, DType> {
+  DType scalar_;
+
+  inline ScalarExpr(const DType& s) : scalar_(s) {}
+
+  inline const DType& Eval(index_t, index_t) const {
+    return scalar_;
+  }
+};
+
+template<typename DType> inline ScalarExpr<DType> scalar(const DType& s) {
+  return ScalarExpr<DType>(s);
+}
+
+
+//---------------------------------------------
+// TypeCastExpr
+//---------------------------------------------
+
+template<typename DstDType, typename SrcDType, typename EType>
+struct TypeCastExpr : public Expr<TypeCastExpr<DstDType, SrcDType, EType>, DstDType> {
+  const EType& expr_;
+
+  inline explicit TypeCastExpr(const EType& e) : expr_(e) {}
+
+  inline DstDType Eval(index_t i, index_t j) const {
+    return static_cast<DstDType>(expr_.Eval(i, j));
+  }
+};
+
+template<typename DstDType, typename SrcDType, typename EType>
+TypeCastExpr<DstDType, SrcDType, EType> Cast(const Expr<EType, SrcDType>& expr) {
+  return TypeCastExpr<DstDType, SrcDType, EType>(expr.self());
+}
+
+//---------------------------------------------
+// RValueExpr
+//---------------------------------------------
+
+template<typename Container, typename DType>
+struct RValueExpr : public Expr<Container, DType> {
+  // inplace operatiors with scalar
+  template<typename EType> inline Container& operator +=(const DType& s) {
+    ExprEngine<sv::plusto, Container, DType>::Eval(this->self(), scalar(s));
+    return this->self();
+  }
+
+  template<typename EType> inline Container& operator -=(const DType& s) {
+    ExprEngine<sv::minusto, Container, DType>::Eval(this->self(), scalar(s));
+    return this->self();
+  }
+
+  template<typename EType> inline Container& operator *=(const DType& s) {
+    ExprEngine<sv::multo, Container, DType>::Eval(this->self(), scalar(s));
+    return this->self();
+  }
+
+  template<typename EType> inline Container& operator /=(const DType& s) {
+    ExprEngine<sv::divto, Container, DType>::Eval(this->self(), scalar(s));
+    return this->self();
+  }
+
+  // assignment (MUST be overrided by derived classes)
+  template<typename EType> inline Container& __assign(const DType& s) {
+    ExprEngine<sv::saveto, Container, DType>::Eval(this->self(), scalar(s));
+    return this->self();
+  }
+
+  template<typename EType> inline Container& __assign(const Expr<EType, DType>& expr) {
+    ExprEngine<sv::saveto, Container, DType>::Eval(this->self(), expr.self());
+    return this->self();
+  }
+
+  // inplace operatiors with expression
+  template<typename EType> inline Container& operator +=(const Expr<EType, DType>& expr) {
+    ExprEngine<sv::plusto, Container, DType>::Eval(this->self(), expr.self());
+    return this->self();
+  }
+
+  template<typename EType> inline Container& operator -=(const Expr<EType, DType>& expr) {
+    ExprEngine<sv::minusto, Container, DType>::Eval(this->self(), expr.self());
+    return this->self();
+  }
+
+  template<typename EType> inline Container& operator *=(const Expr<EType, DType>& expr) {
+    ExprEngine<sv::multo, Container, DType>::Eval(this->self(), expr.self());
+    return this->self();
+  }
+
+  template<typename EType> inline Container& operator /=(const Expr<EType, DType>& expr) {
+    ExprEngine<sv::divto, Container, DType>::Eval(this->self(), expr.self());
+    return this->self();
   }
 };
 
@@ -27,14 +140,14 @@ struct Expr {
 // general binary operation
 template<typename OP, typename TLhs, typename TRhs, typename DType>
 struct BinaryMapExpr : Expr<BinaryMapExpr<OP, TLhs, TRhs, DType>, DType> {
-  const TLhs &lhs;
-  const TRhs &rhs;
+  const TLhs &lhs_;
+  const TRhs &rhs_;
 
   inline explicit BinaryMapExpr(const TLhs &lhs, const TRhs &rhs)
-    : lhs(lhs), rhs(rhs) {}
+    : lhs_(lhs), rhs_(rhs) {}
 
   inline DType Eval(index_t i, index_t j) const {
-    return OP::Map(lhs.Eval(i, j), rhs.Eval(i, j));
+    return OP::Map(lhs_.Eval(i, j), rhs_.Eval(i, j));
   }
 };
 
@@ -44,6 +157,10 @@ inline BinaryMapExpr<OP, TLhs, TRhs, DType>
 F(const Expr<TLhs, DType> &lhs, const Expr<TRhs, DType> &rhs) {
   return BinaryMapExpr<OP, TLhs, TRhs, DType>(lhs.self(), rhs.self());
 }
+
+//---------------------------------------------
+// Binary Operations Override
+//---------------------------------------------
 
 // plus
 template<typename TLhs, typename TRhs, typename DType>
@@ -80,31 +197,38 @@ operator /(const Expr<TLhs, DType> &lhs, const Expr<TRhs, DType> &rhs) {
 // general unary operation
 template<typename OP, typename EType, typename DType>
 struct UnaryMapExpr : Expr<UnaryMapExpr<OP, EType, DType>, DType> {
-  const EType &rval;
+  const EType &expr_;
 
-  inline explicit UnaryMapExpr(const EType& rval) : rval(rval) {}
+  inline explicit UnaryMapExpr(const EType& expr) : expr_(expr) {}
 
   inline DType Eval(index_t i, index_t j) const {
-    return OP::Map(rval.Eval(i, j));
+    return OP::Map(expr_.Eval(i, j));
   }
 };
 
 // template works for any unary expressions
 template<typename OP, typename EType, typename DType>
 inline UnaryMapExpr<OP, EType, DType>
-F(const Expr<EType, DType> &rval) {
-  return UnaryMapExpr<OP, EType, DType>(rval.self());
+F(const Expr<EType, DType> &expr) {
+  return UnaryMapExpr<OP, EType, DType>(expr.self());
 }
 
-// transpose
+//---------------------------------------------
+// TransposeExpr
+//---------------------------------------------
+
 template<typename EType, typename DType>
 struct TransposeExpr : Expr<TransposeExpr<EType, DType>, DType> {
-  const EType &rval;
+  const EType &expr_;
 
-  inline TransposeExpr(const EType& rval) : rval(rval) {}
+  inline TransposeExpr(const EType& expr) : expr_(expr) {}
 
   inline DType Eval(index_t i, index_t j) const {
-    return rval.Eval(j, i);
+    return expr_.Eval(j, i);
+  }
+
+  inline const EType& T(void) const {
+    return expr_;
   }
 };
 
@@ -112,6 +236,10 @@ template<typename SubType, typename DType>
 inline TransposeExpr<SubType, DType> Transpose(const Expr<SubType, DType>& rval) {
   return rval.T();
 }
+
+} // namespace expr
+
+#include "expr_engine.h"
 
 #endif /* end of include guard */
 
