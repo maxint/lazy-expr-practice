@@ -3,8 +3,6 @@
 
 #include <string>
 #include <cstdarg>
-#include <cstdio>
-#include <cstdlib> // exit()
 
 namespace utils {
 
@@ -21,15 +19,5 @@ inline std::string Format(bool exp, const char *fmt, ...) {
 }
 
 }  // namespace utils
-
-#define SM_Error_(tag, fmt, ...)    fprintf(stderr, tag ": " fmt "\n", ##__VA_ARGS__)
-#define SM_Error(fmt, ...)          SM_Error_("Error", fmt, ##__VA_ARGS__)
-#define SM_Assert(expr, fmt, ...)   if ((expr)) ; else SM_Error_("Assert", fmt, ##__VA_ARGS)
-#ifdef _DEBUG
-# define SM_DbgAssert(expr, fmt, ...)  SM_Assert(expr, fmt, ##__VA_ARGS__)
-#else
-# define SM_DbgAssert(expr, fmt, ...)
-#endif // _DEBUG
-#define SM_StaticAssert(expr, msg)  static_assert((expr), msg)
 
 #endif /* end of include guard */

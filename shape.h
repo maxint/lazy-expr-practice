@@ -18,17 +18,17 @@ template <int dimension> struct Shape {
   }
 
   inline index_t& operator [](index_t idx) {
-    assert(idx < kDimension);
+    SM_DbgAssert(idx < kDimension);
     return shape_[idx];
   }
   inline const index_t& operator [](index_t idx) const {
-    assert(idx < kDimension);
+    SM_DbgAssert(idx < kDimension);
     return shape_[idx];
   }
 
   inline bool operator ==(const Shape<kDimension> &s) const {
     for (int i = 0; i < kDimension; i++) {
-      if (s[i] != this->shape_[i])
+      if (s[i] != shape_[i])
         return false;
     }
     return true;

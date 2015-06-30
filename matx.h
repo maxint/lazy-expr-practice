@@ -5,7 +5,7 @@
 #include <ostream>
 
 template<typename T, int m, int n=1>
-struct Matx : public expr::RValueExpr<Matx<T, m, n>, T> {
+struct Matx : public expr::RValueExpr<2, Matx<T, m, n>, T> {
   enum {
     kRows = m,
     kCols = n,
@@ -18,20 +18,20 @@ struct Matx : public expr::RValueExpr<Matx<T, m, n>, T> {
   }
 
   inline Matx(const T& v0) {
-    static_assert(kChannels >= 1, "");
+    SM_StaticAssert(kChannels >= 1, "");
     val_[0] = v0;
     for (int i = 1; i < kChannels; ++i) val_[i] = T(0);
   }
 
   inline Matx(const T& v0, const T& v1) {
-    static_assert(kChannels >= 2, "");
+    SM_StaticAssert(kChannels >= 2, "");
     val_[0] = v0;
     val_[1] = v1;
     for (int i = 2; i < kChannels; ++i) val_[i] = T(0);
   }
 
   inline Matx(const T& v0, const T& v1, const T& v2) {
-    static_assert(kChannels >= 3, "");
+    SM_StaticAssert(kChannels >= 3, "");
     val_[0] = v0;
     val_[1] = v1;
     val_[2] = v2;
@@ -39,7 +39,7 @@ struct Matx : public expr::RValueExpr<Matx<T, m, n>, T> {
   }
 
   inline Matx(const T& v0, const T& v1, const T& v2, const T& v3) {
-    static_assert(kChannels >= 4, "");
+    SM_StaticAssert(kChannels >= 4, "");
     val_[0] = v0;
     val_[1] = v1;
     val_[2] = v2;
@@ -49,7 +49,7 @@ struct Matx : public expr::RValueExpr<Matx<T, m, n>, T> {
 
   // construction from pointer
   inline explicit Matx(const T* ptr) {
-    assert(0 != ptr);
+    SM_Assert(0 != ptr);
     for (int i = 0; i < kChannels; ++i) val_[i] = ptr[i];
   }
 
@@ -66,30 +66,30 @@ struct Matx : public expr::RValueExpr<Matx<T, m, n>, T> {
   }
 
   // construction from expression
-  template<typename EType> inline Matx(const expr::Expr<EType, T> &expr) {
+  template<typename EType> inline explicit Matx(const expr::Expr<EType, T>& expr) {
     this->__assign(expr);
   }
 
   // assignment expression
-  template<typename EType> inline Matx& operator =(const expr::Expr<EType, T> &expr) {
+  template<typename EType> inline Matx& operator =(const expr::Expr<EType, T>& expr) {
     return this->__assign(expr);
   }
 
   //  accessors
   inline T& operator ()(index_t i, index_t j) {
-    assert(i < m && j < n);
+    SM_DbgAssert(i < m && j < n);
     return val_[i*n+j];
   }
   inline const T& operator ()(index_t i, index_t j) const {
-    assert(i < m && j < n);
+    SM_DbgAssert(i < m && j < n);
     return val_[i*n+j];
   }
   inline T& operator ()(index_t i) {
-    assert(i < kChannels);
+    SM_DbgAssert(i < kChannels);
     return val_[i];
   }
   inline const T& operator ()(index_t i) const {
-    assert(i < kChannels);
+    SM_DbgAssert(i < kChannels);
     return val_[i];
   }
   inline T& operator [](index_t i) {
@@ -146,8 +146,6 @@ typedef Matx<int   , 4, 1> Vec4i;
 
 // vector template alias (c++11 only)
 //template<typename T, int m> using Vec = Matx<T, m, 1>;
-
-#include "matx_cpu.h"
 
 #endif /* end of include guard */
 

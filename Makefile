@@ -6,7 +6,7 @@ APP := a.out
 
 all: asm test
 
-$(APP): main.cpp expr.h matx.h
+$(APP): main.cpp expr.h matx.h expr_engine.h base.h shape.h utils.h log.h
 	$(CXX) $(CFLAGS) main.cpp -o $(APP)
 
 test: $(APP)

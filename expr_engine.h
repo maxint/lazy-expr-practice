@@ -2,28 +2,26 @@
 #define __EXPR_ENGINE_H__
 
 #include "expr.h"
+#include "matx.h"
 #include "shape.h"
 
 #include <utility>
 
 namespace expr {
 
-template<typename Saver, typename Container, typename DType, typename EType>
-inline void MapExpr(RValueExpr<Container, DType>& dst, const Expr<EType, DType>& expr);
-
-template<typename Saver, typename Container, typename DType>
-struct ExprEngine {
-  template<typename EType> inline static void Eval(RValueExpr<Container, DType>& dst, const Expr<EType, DType>& expr) {
-    MapExpr<Saver>(dst, expr);
-  }
-};
-
 //---------------------------------------------
-// ShapeCheck
+// Runtime Shape Checking
 //---------------------------------------------
+
 template<int dim, typename EType>
 struct ShapeCheck {
   inline static Shape<dim> Check(const EType& expr);
+};
+template<typename DType, int m, int n>
+struct ShapeCheck<2, Matx<DType, m, n> > {
+  inline static Shape<2> Check(const Matx<DType, m, n>& mat) {
+    return Shape2(m, n);
+  }
 };
 template<int dim, typename DType>
 struct ShapeCheck<dim, ScalarExpr<DType> > {
@@ -53,7 +51,41 @@ struct ShapeCheck<dim, BinaryMapExpr<OP, TLhs, TRhs, DType> > {
     Shape<dim> s2 = ShapeCheck<dim, TRhs>::Check(expr.rhs_);
     if (s1[0] == 0) return s2;
     if (s2[0] == 0) return s1;
+    SM_Assert_(s1 == s2, "BinaryMapExp: Shapes of operands are not the same");
     return s1;
+  }
+};
+template<int dim, typename OP, typename EType, typename DType>
+struct ShapeCheck<dim, UnaryMapExpr<OP, EType, DType> > {
+  inline static Shape<dim> Check(const UnaryMapExpr<OP, EType, DType>& expr) {
+    Shape<dim> s = ShapeCheck<dim, EType>::Check(expr.expr_);
+    return s;
+  }
+};
+
+//---------------------------------------------
+// MapExpr
+//---------------------------------------------
+
+template<typename Saver, int dim, typename Container, typename DType, typename EType>
+inline void MapExpr(RValueExpr<dim, Container, DType>& dexpr, const Expr<EType, DType>& expr) {
+  const EType &src = expr.self();
+  Container &dst = dexpr.self();
+  Shape<dim> eshape = ShapeCheck<dim, EType>::Check(src);
+  Shape<dim> dshape = ShapeCheck<dim, Container>::Check(dst);
+  SM_Assert_(eshape[0] == 0 || eshape == dshape,
+             "Assignment: Shape of expression are not consistent with target");
+  for (index_t i = 0; i < dshape[0]; ++i) {
+    for (index_t j = 0; j < dshape[1]; ++j) {
+      Saver::Save(dst(i, j), src.Eval(i, j));
+    }
+  }
+}
+
+template<typename Saver, int dim, typename Container, typename DType>
+struct ExprEngine {
+  template<typename EType> inline static void Eval(RValueExpr<dim, Container, DType>& dst, const Expr<EType, DType>& expr) {
+    MapExpr<Saver, dim>(dst, expr);
   }
 };
 

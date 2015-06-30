@@ -2,7 +2,7 @@
 #define __BASE_H__
 
 #include <cstdlib> // size_t
-#include <cassert> // assert()
+#include "log.h"
 
 typedef unsigned index_t;
 

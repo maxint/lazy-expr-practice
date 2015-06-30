@@ -6,8 +6,8 @@
 namespace expr {
 
 template<typename EType, typename DType> struct TransposeExpr;
-template<typename Saver, typename RValue, typename DType> struct ExprEngine;
 template<typename DstDType, typename SrcDType, typename EType> struct TypeCastExpr;
+template<typename Saver, int dim, typename RValue, typename DType> struct ExprEngine;
 
 //---------------------------------------------
 // Expr
@@ -77,58 +77,58 @@ TypeCastExpr<DstDType, SrcDType, EType> Cast(const Expr<EType, SrcDType>& expr) 
 // RValueExpr
 //---------------------------------------------
 
-template<typename Container, typename DType>
+template<int dim, typename Container, typename DType>
 struct RValueExpr : public Expr<Container, DType> {
   // inplace operatiors with scalar
   template<typename EType> inline Container& operator +=(const DType& s) {
-    ExprEngine<sv::plusto, Container, DType>::Eval(this->self(), scalar(s));
+    ExprEngine<sv::plusto, dim, Container, DType>::Eval(this->self(), scalar(s));
     return this->self();
   }
 
   template<typename EType> inline Container& operator -=(const DType& s) {
-    ExprEngine<sv::minusto, Container, DType>::Eval(this->self(), scalar(s));
+    ExprEngine<sv::minusto, dim, Container, DType>::Eval(this->self(), scalar(s));
     return this->self();
   }
 
   template<typename EType> inline Container& operator *=(const DType& s) {
-    ExprEngine<sv::multo, Container, DType>::Eval(this->self(), scalar(s));
+    ExprEngine<sv::multo, dim, Container, DType>::Eval(this->self(), scalar(s));
     return this->self();
   }
 
   template<typename EType> inline Container& operator /=(const DType& s) {
-    ExprEngine<sv::divto, Container, DType>::Eval(this->self(), scalar(s));
+    ExprEngine<sv::divto, dim, Container, DType>::Eval(this->self(), scalar(s));
     return this->self();
   }
 
   // assignment (MUST be overrided by derived classes)
   template<typename EType> inline Container& __assign(const DType& s) {
-    ExprEngine<sv::saveto, Container, DType>::Eval(this->self(), scalar(s));
+    ExprEngine<sv::saveto, dim, Container, DType>::Eval(this->self(), scalar(s));
     return this->self();
   }
 
   template<typename EType> inline Container& __assign(const Expr<EType, DType>& expr) {
-    ExprEngine<sv::saveto, Container, DType>::Eval(this->self(), expr.self());
+    ExprEngine<sv::saveto, dim, Container, DType>::Eval(this->self(), expr.self());
     return this->self();
   }
 
   // inplace operatiors with expression
   template<typename EType> inline Container& operator +=(const Expr<EType, DType>& expr) {
-    ExprEngine<sv::plusto, Container, DType>::Eval(this->self(), expr.self());
+    ExprEngine<sv::plusto, dim, Container, DType>::Eval(this->self(), expr.self());
     return this->self();
   }
 
   template<typename EType> inline Container& operator -=(const Expr<EType, DType>& expr) {
-    ExprEngine<sv::minusto, Container, DType>::Eval(this->self(), expr.self());
+    ExprEngine<sv::minusto, dim, Container, DType>::Eval(this->self(), expr.self());
     return this->self();
   }
 
   template<typename EType> inline Container& operator *=(const Expr<EType, DType>& expr) {
-    ExprEngine<sv::multo, Container, DType>::Eval(this->self(), expr.self());
+    ExprEngine<sv::multo, dim, Container, DType>::Eval(this->self(), expr.self());
     return this->self();
   }
 
   template<typename EType> inline Container& operator /=(const Expr<EType, DType>& expr) {
-    ExprEngine<sv::divto, Container, DType>::Eval(this->self(), expr.self());
+    ExprEngine<sv::divto, dim, Container, DType>::Eval(this->self(), expr.self());
     return this->self();
   }
 };
@@ -238,8 +238,6 @@ inline TransposeExpr<SubType, DType> Transpose(const Expr<SubType, DType>& rval)
 }
 
 } // namespace expr
-
-#include "expr_engine.h"
 
 #endif /* end of include guard */
 
