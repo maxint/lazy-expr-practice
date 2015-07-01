@@ -43,7 +43,7 @@ struct ScalarExpr : public Expr<ScalarExpr<DType>, DType> {
 
   inline ScalarExpr(const DType& s) : scalar_(s) {}
 
-  inline const DType& Eval(index_t, index_t) const {
+  inline const DType& Eval(index_t i, index_t j) const {
     return scalar_;
   }
 };
@@ -52,6 +52,11 @@ template<typename DType> inline ScalarExpr<DType> scalar(const DType& s) {
   return ScalarExpr<DType>(s);
 }
 
+//---------------------------------------------
+// IdentityExpr
+//---------------------------------------------
+
+template<typename Container> struct IdentityExpr;
 
 //---------------------------------------------
 // TypeCastExpr
@@ -59,7 +64,7 @@ template<typename DType> inline ScalarExpr<DType> scalar(const DType& s) {
 
 template<typename DstDType, typename SrcDType, typename EType>
 struct TypeCastExpr : public Expr<TypeCastExpr<DstDType, SrcDType, EType>, DstDType> {
-  const EType& expr_;
+  const EType &expr_;
 
   inline explicit TypeCastExpr(const EType& e) : expr_(e) {}
 

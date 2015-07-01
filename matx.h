@@ -2,6 +2,7 @@
 #define __MATX_H__
 
 #include "expr.h"
+#include "shape.h"
 #include <ostream>
 
 template<typename T, int m, int n=1>
@@ -17,7 +18,7 @@ struct Matx : public expr::RValueExpr<2, Matx<T, m, n>, T> {
     for (int i = 0; i < kChannels; ++i) val_[i] = T(0);
   }
 
-  inline Matx(const T& v0) {
+  inline explicit Matx(const T& v0) {
     SM_StaticAssert(kChannels >= 1, "");
     val_[0] = v0;
     for (int i = 1; i < kChannels; ++i) val_[i] = T(0);
@@ -66,11 +67,14 @@ struct Matx : public expr::RValueExpr<2, Matx<T, m, n>, T> {
   }
 
   // construction from expression
-  template<typename EType> inline explicit Matx(const expr::Expr<EType, T>& expr) {
+  template<typename EType> inline Matx(const expr::Expr<EType, T>& expr) {
     this->__assign(expr);
   }
 
   // assignment expression
+  inline Matx& operator =(const T& s) {
+    return this->__assign(s);
+  }
   template<typename EType> inline Matx& operator =(const expr::Expr<EType, T>& expr) {
     return this->__assign(expr);
   }
@@ -103,9 +107,37 @@ struct Matx : public expr::RValueExpr<2, Matx<T, m, n>, T> {
     return (*this)(i, j);
   }
 
+  // creation
+  inline static expr::ScalarExpr<T> All(const T& s) {
+    return expr::scalar(s);
+  }
+  inline static expr::ScalarExpr<T> Zero(void) {
+    return expr::scalar(0);
+  }
+  inline static expr::IdentityExpr<Matx<T, m, n> > Identity(const T& s = 1) {
+    return expr::IdentityExpr<Matx<T, m, n> >(s);
+  }
+
 private:
   T val_[kChannels];
 };
+
+namespace expr {
+template<typename T, int m, int n>
+struct IdentityExpr<Matx<T, m, n> > : public Expr<IdentityExpr<Matx<T, m, n> >, T> {
+  T scalar_;
+
+  inline IdentityExpr<Matx<T, m, n> >(const T& s) : scalar_(s) {}
+
+  inline T Eval(index_t i, index_t j) const {
+    return (i != j) ? 0 : scalar_;
+  }
+
+  inline Shape<2> CheckShape(void) const {
+    return Shape2(m, n);
+  }
+};
+} // namespace expr
 
 // output to stream
 template<typename T, int m, int n>

@@ -11,6 +11,8 @@ namespace expr {
 
 //---------------------------------------------
 // Runtime Shape Checking
+// Note: shape is dependent on rvalue, for example:
+//    Vec3f v = 0;
 //---------------------------------------------
 
 template<int dim, typename EType>
@@ -19,7 +21,7 @@ struct ShapeCheck {
 };
 template<typename DType, int m, int n>
 struct ShapeCheck<2, Matx<DType, m, n> > {
-  inline static Shape<2> Check(const Matx<DType, m, n>& mat) {
+  inline static Shape<2> Check(const Matx<DType, m, n>&) {
     return Shape2(m, n);
   }
 };
@@ -28,6 +30,12 @@ struct ShapeCheck<dim, ScalarExpr<DType> > {
   inline static Shape<dim> Check(const ScalarExpr<DType>& expr) {
     Shape<dim> s; s[0] = 0;
     return s;
+  }
+};
+template<int dim, typename Container>
+struct ShapeCheck<dim, IdentityExpr<Container> > {
+  inline static Shape<dim> Check(const IdentityExpr<Container>& expr) {
+    return expr.CheckShape();
   }
 };
 template<int dim, typename DstDType, typename SrcDType, typename EType>
