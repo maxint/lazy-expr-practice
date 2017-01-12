@@ -9,9 +9,9 @@ template<typename EType, typename DType> struct TransposeExpr;
 template<typename DstDType, typename SrcDType, typename EType> struct TypeCastExpr;
 template<typename Saver, int dim, typename RValue, typename DType> struct ExprEngine;
 
-//---------------------------------------------
+//---------------------------------------------------
 // Expr
-//---------------------------------------------
+//---------------------------------------------------
 
 template<typename SubType, typename DType>
 struct Expr {
@@ -33,9 +33,9 @@ struct Expr {
   }
 };
 
-//---------------------------------------------
+//---------------------------------------------------
 // ScalarExpr
-//---------------------------------------------
+//---------------------------------------------------
 
 template<typename DType>
 struct ScalarExpr : public Expr<ScalarExpr<DType>, DType> {
@@ -52,15 +52,15 @@ template<typename DType> inline ScalarExpr<DType> scalar(const DType& s) {
   return ScalarExpr<DType>(s);
 }
 
-//---------------------------------------------
+//---------------------------------------------------
 // IdentityExpr
-//---------------------------------------------
+//---------------------------------------------------
 
 template<typename Container> struct IdentityExpr;
 
-//---------------------------------------------
+//---------------------------------------------------
 // TypeCastExpr
-//---------------------------------------------
+//---------------------------------------------------
 
 template<typename DstDType, typename SrcDType, typename EType>
 struct TypeCastExpr : public Expr<TypeCastExpr<DstDType, SrcDType, EType>, DstDType> {
@@ -78,9 +78,9 @@ TypeCastExpr<DstDType, SrcDType, EType> Cast(const Expr<EType, SrcDType>& expr) 
   return TypeCastExpr<DstDType, SrcDType, EType>(expr.self());
 }
 
-//---------------------------------------------
+//---------------------------------------------------
 // RValueExpr
-//---------------------------------------------
+//---------------------------------------------------
 
 template<int dim, typename Container, typename DType>
 struct RValueExpr : public Expr<Container, DType> {
@@ -138,9 +138,9 @@ struct RValueExpr : public Expr<Container, DType> {
   }
 };
 
-//---------------------------------------------
+//---------------------------------------------------
 // BinaryMapExpr
-//---------------------------------------------
+//---------------------------------------------------
 
 // general binary operation
 template<typename OP, typename TLhs, typename TRhs, typename DType>
@@ -163,9 +163,9 @@ F(const Expr<TLhs, DType> &lhs, const Expr<TRhs, DType> &rhs) {
   return BinaryMapExpr<OP, TLhs, TRhs, DType>(lhs.self(), rhs.self());
 }
 
-//---------------------------------------------
+//---------------------------------------------------
 // Binary Operations Override
-//---------------------------------------------
+//---------------------------------------------------
 
 // plus
 template<typename TLhs, typename TRhs, typename DType>
@@ -195,9 +195,9 @@ operator /(const Expr<TLhs, DType> &lhs, const Expr<TRhs, DType> &rhs) {
   return F<op::div>(lhs, rhs);
 }
 
-//---------------------------------------------
+//---------------------------------------------------
 // UnaryMapExpr
-//---------------------------------------------
+//---------------------------------------------------
 
 // general unary operation
 template<typename OP, typename EType, typename DType>
@@ -218,9 +218,9 @@ F(const Expr<EType, DType> &expr) {
   return UnaryMapExpr<OP, EType, DType>(expr.self());
 }
 
-//---------------------------------------------
+//---------------------------------------------------
 // TransposeExpr
-//---------------------------------------------
+//---------------------------------------------------
 
 template<typename EType, typename DType>
 struct TransposeExpr : Expr<TransposeExpr<EType, DType>, DType> {

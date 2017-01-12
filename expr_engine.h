@@ -9,11 +9,11 @@
 
 namespace expr {
 
-//---------------------------------------------
+//---------------------------------------------------
 // Runtime Shape Checking
 // Note: shape is dependent on rvalue, for example:
-//    Vec3f v = 0;
-//---------------------------------------------
+//    Vec3f v = scalar(0);
+//---------------------------------------------------
 
 template<int dim, typename EType>
 struct ShapeCheck {
@@ -71,9 +71,9 @@ struct ShapeCheck<dim, UnaryMapExpr<OP, EType, DType> > {
   }
 };
 
-//---------------------------------------------
+//---------------------------------------------------
 // MapExpr
-//---------------------------------------------
+//---------------------------------------------------
 
 template<typename Saver, int dim, typename Container, typename DType, typename EType>
 inline void MapExpr(RValueExpr<dim, Container, DType>& dexpr, const Expr<EType, DType>& expr) {

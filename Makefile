@@ -4,7 +4,7 @@ CFLAGS := -std=c++11 -Wall -O3
 
 APP := a.out
 
-all: asm test
+all: test
 
 $(APP): main.cpp expr.h matx.h expr_engine.h base.h shape.h utils.h log.h
 	$(CXX) $(CFLAGS) main.cpp -o $(APP)

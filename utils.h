@@ -3,6 +3,7 @@
 
 #include <string>
 #include <cstdarg>
+#include <cstdio>
 
 namespace utils {
 
